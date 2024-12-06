@@ -7,13 +7,14 @@ type message struct {
 	Str  string
 }
 
+// 定义常量，分别表示字符串、错误、整数、块、数组和空值
 var (
-	STRING  = message{Type: '+', Str: "string"}
-	ERROR   = message{Type: '-', Str: "error"}
-	INTEGER = message{Type: ':', Str: "integer"}
-	BULK    = message{Type: '$', Str: "bulk"}
-	ARRAY   = message{Type: '*', Str: "array"}
-	NULL    = message{Type: '.', Str: "null"}
+	STRING  = message{Type: '+', Str: "string"}  // 字符串
+	ERROR   = message{Type: '-', Str: "error"}   // 错误
+	INTEGER = message{Type: ':', Str: "integer"} // 整数
+	BULK    = message{Type: '$', Str: "bulk"}    // 块
+	ARRAY   = message{Type: '*', Str: "array"}   // 数组
+	NULL    = message{Type: '.', Str: "null"}    // 空值
 )
 
 type Value struct {

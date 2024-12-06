@@ -5,22 +5,24 @@ import (
 	"sync"
 )
 
+// 定义常量
 const (
-	PING    = "PING"
-	SET     = "SET"
-	GET     = "GET"
-	HSET    = "HSET"
-	HGET    = "HGET"
-	HGETALL = "HGETALL"
+	PING    = "PING"    // ping命令
+	SET     = "SET"     // 设置键值对命令
+	GET     = "GET"     // 获取键值对命令
+	HSET    = "HSET"    // 设置哈希表键值对命令
+	HGET    = "HGET"    // 获取哈希表键值对命令
+	HGETALL = "HGETALL" // 获取哈希表所有键值对命令
 )
 
+// 定义Handlers变量，用于存储命令和对应的处理函数
 var Handlers = map[string]func([]Value) Value{
-	PING:    ping,
-	SET:     set,
-	GET:     get,
-	HSET:    hset,
-	HGET:    hget,
-	HGETALL: hgetall,
+	PING:    ping,    // ping命令对应的处理函数
+	SET:     set,     // 设置键值对命令对应的处理函数
+	GET:     get,     // 获取键值对命令对应的处理函数
+	HSET:    hset,    // 设置哈希表键值对命令对应的处理函数
+	HGET:    hget,    // 获取哈希表键值对命令对应的处理函数
+	HGETALL: hgetall, // 获取哈希表所有键值对命令对应的处理函数
 }
 
 // ping is a command that replies with the argument, or "PONG" if no argument is given.
