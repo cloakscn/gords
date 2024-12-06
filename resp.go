@@ -5,23 +5,11 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+
+	"github.com/cloakscn/gords/message"
 )
 
-const (
-	STRING  = '+'
-	ERROR   = '-'
-	INTEGER = ':'
-	BULK    = '$'
-	ARRAY   = '*'
-)
 
-type Value struct {
-	typ   string
-	str   string
-	num   int
-	bulk  string
-	array []Value
-}
 
 type Resp struct {
 	reader *bufio.Reader
@@ -58,27 +46,27 @@ func (r *Resp) readInteger() (x int, n int, err error) {
 	return int(i64), n, nil
 }
 
-func (r *Resp) Read() (Value, error) {
+func (r *Resp) Read() (message.Value, error) {
 	_type, err := r.reader.ReadByte()
 
 	if err != nil {
-		return Value{}, err
+		return message.Value{}, err
 	}
 
 	switch _type {
-	case ARRAY:
+	case message.ARRAY.Type:
 		return r.readArray()
-	case BULK:
+	case message.BULK.Type:
 		return r.readBulk()
 	default:
 		fmt.Printf("Unknown type: %v", string(_type))
-		return Value{}, nil
+		return message.Value{}, nil
 	}
 }
 
-func (r *Resp) readArray() (Value, error) {
-	v := Value{}
-	v.typ = "array"
+func (r *Resp) readArray() (message.Value, error) {
+	v := message.Value{}
+	v.Typ = message.ARRAY.Str
 
 	// read length of array
 	length, _, err := r.readInteger()
@@ -86,25 +74,25 @@ func (r *Resp) readArray() (Value, error) {
 		return v, err
 	}
 
-	// foreach line, parse and read the value
-	v.array = make([]Value, length)
+	// foreach line, parse and read the message.value
+	v.Array = make([]message.Value, length)
 	for i := 0; i < length; i++ {
 		val, err := r.Read()
 		if err != nil {
 			return v, err
 		}
 
-		// add parsed value to array
-		v.array[i] = val
+		// add parsed message.value to array
+		v.Array[i] = val
 	}
 
 	return v, nil
 }
 
-func (r *Resp) readBulk() (Value, error) {
-	v := Value{}
+func (r *Resp) readBulk() (message.Value, error) {
+	v := message.Value{}
 
-	v.typ = "bulk"
+	v.Typ = message.BULK.Str
 
 	len, _, err := r.readInteger()
 	if err != nil {
@@ -115,76 +103,12 @@ func (r *Resp) readBulk() (Value, error) {
 
 	r.reader.Read(bulk)
 
-	v.bulk = string(bulk)
+	v.Bulk = string(bulk)
 
 	// Read the trailing CRLF
 	r.readLine()
 
 	return v, nil
-}
-
-func (v Value) Marshal() []byte {
-	switch v.typ {
-	case "array":
-		return v.marshalArray()
-	case "bulk":
-		return v.marshalBulk()
-	case "string":
-		return v.marshalString()
-	case "null":
-		return v.marshallNull()
-	case "error":
-		return v.marshallError()
-	default:
-		return []byte{}
-	}
-}
-
-func (v Value) marshalString() []byte {
-	var bytes []byte
-	bytes = append(bytes, STRING)
-	bytes = append(bytes, v.str...)
-	bytes = append(bytes, '\r', '\n')
-
-	return bytes
-}
-
-func (v Value) marshalBulk() []byte {
-	var bytes []byte
-	bytes = append(bytes, BULK)
-	bytes = append(bytes, strconv.Itoa(len(v.bulk))...)
-	bytes = append(bytes, '\r', '\n')
-	bytes = append(bytes, v.bulk...)
-	bytes = append(bytes, '\r', '\n')
-
-	return bytes
-}
-
-func (v Value) marshalArray() []byte {
-	len := len(v.array)
-	var bytes []byte
-	bytes = append(bytes, ARRAY)
-	bytes = append(bytes, strconv.Itoa(len)...)
-	bytes = append(bytes, '\r', '\n')
-
-	for i := 0; i < len; i++ {
-		bytes = append(bytes, v.array[i].Marshal()...)
-	}
-
-	return bytes
-}
-
-func (v Value) marshallError() []byte {
-	var bytes []byte
-	bytes = append(bytes, ERROR)
-	bytes = append(bytes, v.str...)
-	bytes = append(bytes, '\r', '\n')
-
-	return bytes
-}
-
-func (v Value) marshallNull() []byte {
-	return []byte("$-1\r\n")
 }
 
 type Writer struct {
@@ -195,7 +119,7 @@ func NewWriter(w io.Writer) *Writer {
 	return &Writer{writer: w}
 }
 
-func (w *Writer) Write(v Value) error {
+func (w *Writer) Write(v message.Value) error {
 	var bytes = v.Marshal()
 
 	_, err := w.writer.Write(bytes)

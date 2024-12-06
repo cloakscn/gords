@@ -1,3 +1,3 @@
-module github.com/cloakscn/go-redis
+module github.com/cloakscn/gords
 
 go 1.23.3
