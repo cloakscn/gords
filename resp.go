@@ -6,7 +6,6 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/cloakscn/gords/message"
 )
 
 
@@ -46,27 +45,27 @@ func (r *Resp) readInteger() (x int, n int, err error) {
 	return int(i64), n, nil
 }
 
-func (r *Resp) Read() (message.Value, error) {
+func (r *Resp) Read() (Value, error) {
 	_type, err := r.reader.ReadByte()
 
 	if err != nil {
-		return message.Value{}, err
+		return Value{}, err
 	}
 
 	switch _type {
-	case message.ARRAY.Type:
+	case ARRAY.Type:
 		return r.readArray()
-	case message.BULK.Type:
+	case BULK.Type:
 		return r.readBulk()
 	default:
 		fmt.Printf("Unknown type: %v", string(_type))
-		return message.Value{}, nil
+		return Value{}, nil
 	}
 }
 
-func (r *Resp) readArray() (message.Value, error) {
-	v := message.Value{}
-	v.Typ = message.ARRAY.Str
+func (r *Resp) readArray() (Value, error) {
+	v := Value{}
+	v.Typ = ARRAY.Str
 
 	// read length of array
 	length, _, err := r.readInteger()
@@ -74,25 +73,25 @@ func (r *Resp) readArray() (message.Value, error) {
 		return v, err
 	}
 
-	// foreach line, parse and read the message.value
-	v.Array = make([]message.Value, length)
+	// foreach line, parse and read the value
+	v.Array = make([]Value, length)
 	for i := 0; i < length; i++ {
 		val, err := r.Read()
 		if err != nil {
 			return v, err
 		}
 
-		// add parsed message.value to array
+		// add parsed value to array
 		v.Array[i] = val
 	}
 
 	return v, nil
 }
 
-func (r *Resp) readBulk() (message.Value, error) {
-	v := message.Value{}
+func (r *Resp) readBulk() (Value, error) {
+	v := Value{}
 
-	v.Typ = message.BULK.Str
+	v.Typ = BULK.Str
 
 	len, _, err := r.readInteger()
 	if err != nil {
@@ -119,7 +118,7 @@ func NewWriter(w io.Writer) *Writer {
 	return &Writer{writer: w}
 }
 
-func (w *Writer) Write(v message.Value) error {
+func (w *Writer) Write(v Value) error {
 	var bytes = v.Marshal()
 
 	_, err := w.writer.Write(bytes)

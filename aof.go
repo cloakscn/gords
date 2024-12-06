@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloakscn/gords/message"
 )
 
 type Aof struct {
@@ -50,7 +49,7 @@ func (aof *Aof) Close() error {
 	return aof.file.Close()
 }
 
-func (aof *Aof) Write(value message.Value) error {
+func (aof *Aof) Write(value Value) error {
 	aof.mu.Lock()
 	defer aof.mu.Unlock()
 
@@ -62,7 +61,7 @@ func (aof *Aof) Write(value message.Value) error {
 	return nil
 }
 
-func (aof *Aof) Read(callback func(value message.Value)) error {
+func (aof *Aof) Read(callback func(value Value)) error {
 	aof.mu.Lock()
 	defer aof.mu.Unlock()
 

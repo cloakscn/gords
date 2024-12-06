@@ -5,7 +5,6 @@ import (
 	"net"
 	"strings"
 
-	"github.com/cloakscn/gords/message"
 )
 
 func main() {
@@ -25,7 +24,7 @@ func main() {
 	}
 	defer aof.Close()
 
-	aof.Read(func(value message.Value) {
+	aof.Read(func(value Value) {
 		command := strings.ToUpper(value.Array[0].Bulk)
 		args := value.Array[1:]
 
@@ -55,7 +54,7 @@ func main() {
 			return
 		}
 
-		if value.Typ != message.ARRAY.Str {
+		if value.Typ != ARRAY.Str {
 			fmt.Println("Invalid request, expected array")
 			continue
 		}
@@ -73,7 +72,7 @@ func main() {
 		handler, ok := Handlers[command]
 		if !ok {
 			fmt.Println("Invalid command: ", command)
-			writer.Write(message.Value{Typ: message.STRING.Str, Str: ""})
+			writer.Write(Value{Typ: STRING.Str, Str: ""})
 			continue
 		}
 

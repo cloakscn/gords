@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/cloakscn/gords/message"
 )
 
-var Handlers = map[string]func([]message.Value) message.Value{
+var Handlers = map[string]func([]Value) Value{
 	"PING":    ping,
 	"SET":     set,
 	"GET":     get,
@@ -16,20 +15,20 @@ var Handlers = map[string]func([]message.Value) message.Value{
 	"HGETALL": hgetall,
 }
 
-func ping(args []message.Value) message.Value {
+func ping(args []Value) Value {
 	if len(args) == 0 {
-		return message.Value{Typ: message.STRING.Str, Str: "PONG"}
+		return Value{Typ: STRING.Str, Str: "PONG"}
 	}
 
-	return message.Value{Typ: message.STRING.Str, Str: args[0].Bulk}
+	return Value{Typ: STRING.Str, Str: args[0].Bulk}
 }
 
 var SETs = map[string]string{}
 var SETsMu = sync.RWMutex{}
 
-func set(args []message.Value) message.Value {
+func set(args []Value) Value {
 	if len(args) != 2 {
-		return message.Value{Typ: message.ERROR.Str, Str: "ERR wrong number of arguments for 'set' command"}
+		return Value{Typ: ERROR.Str, Str: "ERR wrong number of arguments for 'set' command"}
 	}
 
 	key := args[0].Bulk
@@ -39,12 +38,12 @@ func set(args []message.Value) message.Value {
 	SETs[key] = value
 	SETsMu.Unlock()
 
-	return message.Value{Typ: message.STRING.Str, Str: "OK"}
+	return Value{Typ: STRING.Str, Str: "OK"}
 }
 
-func get(args []message.Value) message.Value {
+func get(args []Value) Value {
 	if len(args) != 1 {
-		return message.Value{Typ: message.ERROR.Str, Str: "ERR wrong number of arguments for 'get' command"}
+		return Value{Typ: ERROR.Str, Str: "ERR wrong number of arguments for 'get' command"}
 	}
 
 	key := args[0].Bulk
@@ -54,18 +53,18 @@ func get(args []message.Value) message.Value {
 	SETsMu.RUnlock()
 
 	if !ok {
-		return message.Value{Typ: message.NULL.Str}
+		return Value{Typ: NULL.Str}
 	}
 
-	return message.Value{Typ: message.BULK.Str, Bulk: value}
+	return Value{Typ: BULK.Str, Bulk: value}
 }
 
 var HSETs = map[string]map[string]string{}
 var HSETsMu = sync.RWMutex{}
 
-func hset(args []message.Value) message.Value {
+func hset(args []Value) Value {
 	if len(args) != 3 {
-		return message.Value{Typ: message.ERROR.Str, Str: "ERR wrong number of arguments for 'hset' command"}
+		return Value{Typ: ERROR.Str, Str: "ERR wrong number of arguments for 'hset' command"}
 	}
 
 	hash := args[0].Bulk
@@ -79,16 +78,16 @@ func hset(args []message.Value) message.Value {
 	HSETs[hash][key] = value
 	HSETsMu.Unlock()
 
-	return message.Value{Typ: message.STRING.Str, Str: "OK"}
+	return Value{Typ: STRING.Str, Str: "OK"}
 }
 
 // hget retrieves the value associated with the specified key from the hash map
 // identified by the given hash. It expects exactly two arguments: the hash and
 // the key. If the key does not exist within the hash, a null value is returned.
 // If the number of arguments is incorrect, it returns an error.
-func hget(args []message.Value) message.Value {
+func hget(args []Value) Value {
 	if len(args) != 2 {
-		return message.Value{Typ: message.ERROR.Str, Str: "ERR wrong number of arguments for 'hget' command"}
+		return Value{Typ: ERROR.Str, Str: "ERR wrong number of arguments for 'hget' command"}
 	}
 
 	hash := args[0].Bulk
@@ -99,15 +98,15 @@ func hget(args []message.Value) message.Value {
 	HSETsMu.RUnlock()
 
 	if !ok {
-		return message.Value{Typ: message.NULL.Str}
+		return Value{Typ: NULL.Str}
 	}
 
-	return message.Value{Typ: message.BULK.Str, Bulk: value}
+	return Value{Typ: BULK.Str, Bulk: value}
 }
 
-func hgetall(args []message.Value) message.Value {
+func hgetall(args []Value) Value {
 	if len(args) != 1 {
-		return message.Value{Typ: message.BULK.Str, Str: "ERR wrong number of arguments for 'hgetall' commandmessage."}
+		return Value{Typ: BULK.Str, Str: "ERR wrong number of arguments for 'hgetall' command"}
 	}
 
 	hash := args[0].Bulk
@@ -117,13 +116,13 @@ func hgetall(args []message.Value) message.Value {
 	HSETsMu.RUnlock()
 
 	if !ok {
-		return message.Value{Typ: message.NULL.Str}
+		return Value{Typ: NULL.Str}
 	}
 
-	result := message.Value{Typ: message.ARRAY.Str}
+	result := Value{Typ: ARRAY.Str}
 	for key, value := range values {
-		result.Array = append(result.Array, message.Value{
-			Typ: message.BULK.Str, Bulk: fmt.Sprintf("%s: %s", key, value)})
+		result.Array = append(result.Array, Value{
+			Typ: BULK.Str, Bulk: fmt.Sprintf("%s: %s", key, value)})
 	}
 
 	return result
