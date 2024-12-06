@@ -9,12 +9,14 @@ import (
 
 )
 
+// Aof结构体，用于存储AOF文件的相关信息
 type Aof struct {
 	file *os.File
 	rd   *bufio.Reader
 	mu   sync.Mutex
 }
 
+// NewAof函数，用于创建一个新的Aof实例
 func NewAof(path string) (*Aof, error) {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
