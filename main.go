@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-
 )
 
 func main() {
@@ -76,7 +75,7 @@ func main() {
 			continue
 		}
 
-		if command == "SET" || command == "HSET" {
+		if command == SET || command == HSET {
 			aof.Write(value)
 		}
 

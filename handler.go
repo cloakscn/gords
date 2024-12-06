@@ -3,18 +3,27 @@ package main
 import (
 	"fmt"
 	"sync"
+)
 
+const (
+	PING    = "PING"
+	SET     = "SET"
+	GET     = "GET"
+	HSET    = "HSET"
+	HGET    = "HGET"
+	HGETALL = "HGETALL"
 )
 
 var Handlers = map[string]func([]Value) Value{
-	"PING":    ping,
-	"SET":     set,
-	"GET":     get,
-	"HSET":    hset,
-	"HGET":    hget,
-	"HGETALL": hgetall,
+	PING:    ping,
+	SET:     set,
+	GET:     get,
+	HSET:    hset,
+	HGET:    hget,
+	HGETALL: hgetall,
 }
 
+// ping is a command that replies with the argument, or "PONG" if no argument is given.
 func ping(args []Value) Value {
 	if len(args) == 0 {
 		return Value{Typ: STRING.Str, Str: "PONG"}
@@ -26,6 +35,18 @@ func ping(args []Value) Value {
 var SETs = map[string]string{}
 var SETsMu = sync.RWMutex{}
 
+// set sets the value associated with the specified key to the provided value.
+// It returns the string reply "OK".
+//
+// Parameters:
+//   - args: A slice of Value, expected to contain exactly two elements:
+//     1. The key to set.
+//     2. The value to set for the key.
+//
+// Returns:
+//   - Value: A Value struct containing the result of the operation:
+//   - If the key exists, returns a simple string reply "OK".
+//   - If the number of arguments is incorrect, returns an error message.
 func set(args []Value) Value {
 	if len(args) != 2 {
 		return Value{Typ: ERROR.Str, Str: "ERR wrong number of arguments for 'set' command"}
@@ -41,6 +62,19 @@ func set(args []Value) Value {
 	return Value{Typ: STRING.Str, Str: "OK"}
 }
 
+// get retrieves the value associated with the specified key from the SETs map.
+// If the key exists, it returns the corresponding value. If the key doesn't exist,
+// it returns a null reply.
+//
+// Parameters:
+//   - args: A slice of Value, expected to contain exactly one element:
+//     The key whose value is to be retrieved.
+//
+// Returns:
+//   - Value: A Value struct containing the result of the operation:
+//   - If the key exists, returns a bulk string reply with the value.
+//   - If the key doesn't exist, returns a null reply.
+//   - If the number of arguments is incorrect, returns an error message.
 func get(args []Value) Value {
 	if len(args) != 1 {
 		return Value{Typ: ERROR.Str, Str: "ERR wrong number of arguments for 'get' command"}
@@ -62,6 +96,20 @@ func get(args []Value) Value {
 var HSETs = map[string]map[string]string{}
 var HSETsMu = sync.RWMutex{}
 
+// hset sets the field in the hash stored at the specified key to the provided value.
+// If the key does not exist, a new key holding a hash is created.
+// If the field already exists in the hash, it is overwritten.
+//
+// Parameters:
+//   - args: A slice of Value, expected to contain exactly three elements:
+//     1. The key under which the hash is stored.
+//     2. The field within the hash to set.
+//     3. The value to set for the field.
+//
+// Returns:
+//   - Value: A Value struct containing the result of the operation:
+//   - If successful, returns a simple string reply "OK".
+//   - If the number of arguments is incorrect, returns an error message.
 func hset(args []Value) Value {
 	if len(args) != 3 {
 		return Value{Typ: ERROR.Str, Str: "ERR wrong number of arguments for 'hset' command"}
@@ -81,10 +129,19 @@ func hset(args []Value) Value {
 	return Value{Typ: STRING.Str, Str: "OK"}
 }
 
-// hget retrieves the value associated with the specified key from the hash map
-// identified by the given hash. It expects exactly two arguments: the hash and
-// the key. If the key does not exist within the hash, a null value is returned.
-// If the number of arguments is incorrect, it returns an error.
+// hget retrieves the value associated with a field in a hash stored at the specified key.
+// It returns the value of the field if it exists, or a null reply if either the key or the field do not exist.
+//
+// Parameters:
+//   - args: A slice of Value, expected to contain exactly two elements:
+//     1. The key under which the hash is stored.
+//     2. The field within the hash whose value is to be retrieved.
+//
+// Returns:
+//   - Value: A Value struct containing the result of the operation:
+//   - If successful, returns a bulk string reply with the value of the field.
+//   - If the key or field doesn't exist, returns a null reply.
+//   - If the number of arguments is incorrect, returns an error message.
 func hget(args []Value) Value {
 	if len(args) != 2 {
 		return Value{Typ: ERROR.Str, Str: "ERR wrong number of arguments for 'hget' command"}
@@ -104,6 +161,19 @@ func hget(args []Value) Value {
 	return Value{Typ: BULK.Str, Bulk: value}
 }
 
+// hgetall retrieves all key-value pairs from a hash stored at the specified key.
+// It returns an array of strings, where each pair of consecutive elements
+// represents a key and its value from the hash.
+//
+// Parameters:
+//   - args: A slice of Value, expected to contain exactly one element
+//     representing the key of the hash to retrieve.
+//
+// Returns:
+//   - Value: A Value struct containing the result of the operation.
+//     If the hash exists, it returns an array of strings with all key-value pairs.
+//     If the hash doesn't exist, it returns a null value.
+//     If the number of arguments is incorrect, it returns an error message.
 func hgetall(args []Value) Value {
 	if len(args) != 1 {
 		return Value{Typ: BULK.Str, Str: "ERR wrong number of arguments for 'hgetall' command"}

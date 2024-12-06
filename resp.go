@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-
 )
-
-
 
 type Resp struct {
 	reader *bufio.Reader
